@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import copy
 import os
+import sys
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -234,9 +235,10 @@ def find(parser, args):
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        if env:
-            display_env(env, args, decorator)
-        if args.groups:
+        if not args.format:
+            if env:
+                display_env(env, args, decorator)
+        if sys.stdout.isatty() and args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(
             results, args, decorator=decorator, all_headers=True)

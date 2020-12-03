@@ -5,6 +5,7 @@
 import sys
 import os
 
+import spack.config
 import spack.util.prefix as prefix
 import spack.util.environment as environment
 import spack.build_environment as build_env
@@ -25,6 +26,10 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
+    inspections = spack.config.get('modules:prefix_inspections', None)
+    if inspections is not None:
+        return inspections
+
     inspections = {
         'bin': ['PATH'],
         'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
@@ -35,12 +40,13 @@ def prefix_inspections(platform):
         'include': ['CPATH'],
         'lib/pkgconfig': ['PKG_CONFIG_PATH'],
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        'share/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
     }
 
     if platform == 'darwin':
         for subdir in ('lib', 'lib64'):
-            inspections[subdir].append('DYLD_LIBRARY_PATH')
+            inspections[subdir].append('DYLD_FALLBACK_LIBRARY_PATH')
 
     return inspections
 
@@ -65,7 +71,7 @@ def environment_modifications_for_spec(spec, view=None):
     This list is specific to the location of the spec or its projection in
     the view."""
     spec = spec.copy()
-    if view:
+    if view and not spec.external:
         spec.prefix = prefix.Prefix(view.view().get_projection_for_spec(spec))
 
     # generic environment modifications determined by inspecting the spec

@@ -18,8 +18,8 @@ def minimal_configuration():
             ],
             'container': {
                 'format': 'docker',
-                'base': {
-                    'image': 'ubuntu:18.04',
+                'images': {
+                    'os': 'ubuntu:18.04',
                     'spack': 'develop'
                 }
             }
@@ -39,5 +39,5 @@ def config_dumper(tmpdir):
 
 
 @pytest.fixture()
-def configuration_dir(minimal_configuration, config_dumper):
+def container_config_dir(minimal_configuration, config_dumper):
     return config_dumper(minimal_configuration)

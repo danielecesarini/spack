@@ -23,6 +23,8 @@ class IntelTbb(Package):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3')
+    version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
     version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
     version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
     version('2019.9', sha256='3f5ea81b9caa195f1967a599036b473b2e7c347117330cda99b79cfcf5b77c84')
@@ -68,6 +70,8 @@ class IntelTbb(Package):
     #
     #    See https://github.com/intel/tbb/pull/147 for details.
     #
+    conflicts('%apple-clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
     conflicts('%clang', when='@:2019.6',
               msg='2019.7 or later required for clang')
 
@@ -99,14 +103,20 @@ class IntelTbb(Package):
     patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:2021.0')
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Restore the debug targets.
-    patch("makefile-debug.patch", when="@2020:")
+    patch("makefile-debug.patch", when="@2020:2021.0")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
+
+    # Add support for building on arm64 macOS,
+    # also included in hombrew and already available upstream:
+    # https://github.com/oneapi-src/oneTBB/pull/258
+    # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
+    patch("macos-arm64.patch", when="@:2021.0")
 
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
@@ -131,22 +141,22 @@ class IntelTbb(Package):
             for f in fs:
                 lines = open(f).readlines()
                 of = open(f, "w")
-                for l in lines:
-                    if l.strip().startswith("CPLUS ="):
+                for lin in lines:
+                    if lin.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CONLY ="):
+                    elif lin.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:
-                        of.write(l)
+                        of.write(lin)
 
     def install(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (spec.satisfies('%gcc@4.8.0: os=rhel6')
-            or spec.satisfies('%gcc@4.8.0: os=centos6')
-            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+                or spec.satisfies('%gcc@4.8.0: os=centos6')
+                or spec.satisfies('%gcc@4.8.0: os=scientific6')):
             filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
                         join_path('build', 'linux.gcc.inc'))
 
@@ -162,7 +172,7 @@ class IntelTbb(Package):
         #
         self.coerce_to_spack("build")
 
-        if spec.satisfies('%clang'):
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             tbb_compiler = "clang"
         elif spec.satisfies('%intel'):
             tbb_compiler = "icc"
@@ -201,13 +211,11 @@ class IntelTbb(Package):
 
         for lib_name in tbb_lib_names:
             # install release libs
-            fs = glob.glob(join_path("build", "*release", lib_name + ".*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*release", lib_name + ".*"),
+                    prefix.lib)
             # install debug libs if they exist
-            fs = glob.glob(join_path("build", "*debug", lib_name + "_debug.*"))
-            for f in fs:
-                install(f, prefix.lib)
+            install(join_path("build", "*debug", lib_name + "_debug.*"),
+                    prefix.lib)
 
         if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
@@ -223,3 +231,9 @@ class IntelTbb(Package):
         # Replace @rpath in ids with full path
         if sys.platform == 'darwin':
             fix_darwin_install_name(self.prefix.lib)
+
+    @property
+    def libs(self):
+        shared = True if '+shared' in self.spec else False
+        return find_libraries(
+            'libtbb*', root=self.prefix, shared=shared, recursive=True)

@@ -16,7 +16,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.2.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
@@ -30,6 +30,14 @@ class PyNumpy(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
+    version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')
+    version('1.19.2', sha256='0d310730e1e793527065ad7dde736197b705d0e4c9999775f212b03c44a8484c')
+    version('1.19.1', sha256='b8456987b637232602ceb4d663cb34106f7eb780e247d51a260b84760fd8f491')
+    version('1.19.0', sha256='76766cc80d6128750075378d3bb7812cf146415bd29b588616f72c943c00d598')
+    version('1.18.5', sha256='34e96e9dae65c4839bd80012023aadd6ee2ccb73ce7fdf3074c62f301e63120b')
+    version('1.18.4', sha256='bbcc85aaf4cd84ba057decaead058f43191cc0e30d6bc5d44fe336dc3d3f4509')
+    version('1.18.3', sha256='e46e2384209c91996d5ec16744234d1c906ab79a701ce1a26155c9ec890b8dc8')
     version('1.18.2', sha256='e7894793e6e8540dbeac77c87b489e331947813511108ae097f1715c018b8f3d')
     version('1.18.1', sha256='b6ff59cee96b454516e47e7721098e6ceebef435e3e21ac2d6c3b8b02628eb77')
     version('1.18.0', sha256='a9d72d9abaf65628f0f31bbb573b7d9304e43b1e6bbae43149c17737a42764c4')
@@ -79,19 +87,28 @@ class PyNumpy(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
     depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
-    depends_on('py-setuptools', type='build')
+    depends_on('python@3.6:', type=('build', 'run'), when='@1.19:')
+    depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
+    depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
     depends_on('py-nose@1.0.0:', when='@:1.14', type='test')
     depends_on('py-pytest', when='@1.15:', type='test')
+    depends_on('py-hypothesis', when='@1.19:', type='test')
 
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
+
+    # Add Fujitsu Fortran compiler
+    patch('add_fj_compiler.patch', when='@1.19.3:%fj')
+    patch('add_fj_compiler2.patch', when='@1.19.0:1.19.2%fj')
+    patch('add_fj_compiler3.patch', when='@1.14.0:1.18.5%fj')
+    patch('add_fj_compiler4.patch', when='@:1.13.3%fj')
 
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
@@ -289,7 +306,7 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
+    def build_test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

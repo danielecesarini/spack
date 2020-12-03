@@ -10,10 +10,13 @@ class SuiteSparse(Package):
     """
     SuiteSparse is a suite of sparse matrix algorithms
     """
-    homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
+    homepage = 'https://people.engr.tamu.edu/davis/suitesparse.html'
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.8.1', sha256='06726e471fbaa55f792578f9b4ab282ea9d008cf39ddcc3b42b73400acddef40')
+    version('5.8.0', sha256='94a9b7134eb4dd82b97f1a22a6b464feb81e73af2dcdf683c6f252285191df1d')
+    version('5.7.2', sha256='fe3bc7c3bd1efdfa5cffffb5cebf021ff024c83b5daf0ab445429d3d741bd3ad')
     version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
     version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
     version('5.5.0', sha256='63c73451734e2bab19d1915796c6776565ea6aea5da4063a9797ecec60da2e3d')
@@ -32,6 +35,8 @@ class SuiteSparse(Package):
     variant('cuda', default=False, description='Build with CUDA')
     variant('openmp', default=False, description='Build with OpenMP')
 
+    depends_on('mpfr', type=('build', 'link'), when='@5.8.0:')
+    depends_on('gmp', type=('build', 'link'), when='@5.8.0:')
     depends_on('blas')
     depends_on('lapack')
     depends_on('m4', type='build', when='@5.0.0:')
@@ -48,6 +53,7 @@ class SuiteSparse(Package):
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
+    patch('pgi.patch', when='%nvhpc')
 
     # This patch adds '-lm' when linking libgraphblas and when using clang.
     # Fixes 'libgraphblas.so.2.0.1: undefined reference to `__fpclassify''
@@ -62,7 +68,8 @@ class SuiteSparse(Package):
         # logic in it. Any kind of customization will need to go through
         # filtering of that file
 
-        pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
+        cc_pic_flag  = self.compiler.cc_pic_flag  if '+pic' in spec else ''
+        f77_pic_flag = self.compiler.f77_pic_flag if '+pic' in spec else ''
 
         make_args = [
             # By default, the Makefile uses the Intel compilers if
@@ -77,11 +84,11 @@ class SuiteSparse(Package):
             'CUDA_PATH=%s' % (spec['cuda'].prefix if '+cuda' in spec else ''),
             'CFOPENMP=%s' % (self.compiler.openmp_flag
                              if '+openmp' in spec else ''),
-            'CFLAGS=-O3 %s' % pic_flag,
+            'CFLAGS=-O3 %s' % cc_pic_flag,
             # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
             # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
-            'FFLAGS=%s' % pic_flag,
-            'F77FLAGS=%s' % pic_flag,
+            'FFLAGS=%s' % f77_pic_flag,
+            'F77FLAGS=%s' % f77_pic_flag,
             # use Spack's metis in CHOLMOD/Partition module,
             # otherwise internal Metis will be compiled
             'MY_METIS_LIB=%s' % spec['metis'].libs.ld_flags,
@@ -95,6 +102,14 @@ class SuiteSparse(Package):
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
 
+        # Recent versions require c11 but some demos do not get the c11 from
+        # GraphBLAS/CMakeLists.txt, for example the file
+        # GraphBLAS/Demo/Program/wildtype_demo.c. For many compilers this is
+        # not an issue because c11 or newer is their default. However, for some
+        # compilers (e.g. xlc) the c11 flag is necessary.
+        if spec.satisfies('@5.4:5.7.1') and ('%xl' in spec or '%xl_r' in spec):
+            make_args += ['CFLAGS+=%s' % self.compiler.c11_flag]
+
         # 64bit blas in UMFPACK:
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
@@ -105,7 +120,7 @@ class SuiteSparse(Package):
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
         if any([x in spec
-                for x in ('%clang', '%gcc', '%intel')]):
+                for x in ('%apple-clang', '%clang', '%gcc', '%intel')]):
             make_args += ['CFLAGS+=-fno-common -fexceptions']
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']
@@ -132,10 +147,17 @@ class SuiteSparse(Package):
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
         if '@5.4.0:' in self.spec:
-            make('default', *make_args)
+            make('library', *make_args)
 
         make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
+
+    @run_after('install')
+    def fix_darwin_install(self):
+        # The shared libraries are not installed correctly on Darwin:
+        # See https://github.com/DrTimothyAldenDavis/SuiteSparse/issues/42
+        if '+pic platform=darwin' in self.spec:
+            fix_darwin_install_name(self.spec.prefix.lib)
 
     @property
     def libs(self):

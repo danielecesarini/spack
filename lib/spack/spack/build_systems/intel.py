@@ -1017,6 +1017,15 @@ class IntelPackage(PackageBase):
 
         env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
+        if self.spec.name in ('intel', 'intel-parallel-studio'):
+            # this package provides compilers
+            # TODO: fix check above when compilers are dependencies
+            env.set('CC', self.prefix.bin.icc)
+            env.set('CXX', self.prefix.bin.icpc)
+            env.set('FC', self.prefix.bin.ifort)
+            env.set('F77', self.prefix.bin.ifort)
+            env.set('F90', self.prefix.bin.ifort)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
@@ -1073,6 +1082,15 @@ class IntelPackage(PackageBase):
                 # which performs dizzyingly similar but necessarily different
                 # actions, and (b) function code leaves a bit more breathing
                 # room within the suffocating corset of flake8 line length.
+
+                # Intel MPI since 2019 depends on libfabric which is not in the
+                # lib directory but in a directory of its own which should be
+                # included in the rpath
+                if self.version >= ver('2019'):
+                    d = ancestor(self.component_lib_dir('mpi'))
+                    libfabrics_path = os.path.join(d, 'libfabric', 'lib')
+                    env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                                    libfabrics_path)
             else:
                 raise InstallError('compilers_of_client arg required for MPI')
 

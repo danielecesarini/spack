@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import re
 
 
 class Automake(AutotoolsPackage, GNUMirrorPackage):
@@ -24,6 +23,14 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
     depends_on('perl', type=('build', 'run'))
 
     build_directory = 'spack-build'
+
+    executables = ['^automake$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU automake\)\s+(\S+)', output)
+        return match.group(1) if match else None
 
     def patch(self):
         # The full perl shebang might be too long
