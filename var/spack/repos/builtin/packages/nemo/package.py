@@ -265,9 +265,8 @@ class Nemo(MakefilePackage):
         # Add reference configuration
         ref_conf = self.spec.variants['ref_conf'].value
         options.extend(['-r', '%s' % ref_conf, '-n', 'SPACK-%s' % ref_conf])
-        
+
         # Configure parallel build
-        # FIXME ask for parallel build variable
         if self.parallel:
             options.extend([
                 '-j', 
@@ -277,11 +276,11 @@ class Nemo(MakefilePackage):
         if(self.spec.variants['add_key'].value[0] != 'none'):
             options.extend([
                 'add_key', 
-                ' \\\"%s\\\"' % ' '.join(self.spec.variants['add_key'].value)])
+                '%s' % ' '.join(self.spec.variants['add_key'].value)])
         if(self.spec.variants['del_key'].value[0] != 'none'):
             options.extend([
                 'del_key', 
-                '\\\"%s\\\"' % ' '.join(self.spec.variants['del_key'].value)])
+                '%s' % ' '.join(self.spec.variants['del_key'].value)])
 
         # Append to global
         self.nemo_options = options
