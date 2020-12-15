@@ -22,8 +22,16 @@ class Nemo(MakefilePackage):
     homepage = 'http://forge.ipsl.jussieu.fr/nemo/wiki/Users'
     maintainers = ['danielecesarini']
 
-    version('4.0.1', revision=14040,
-            svn='http://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/release-4.0.1')
+    version('4.0',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/release-4.0')
+    version('4.0.1',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/release-4.0.1')
+    version('4.0.2',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.2')
+    version('4.0.3',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.3')
+    version('4.0.4',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.4')
 
     ref_conf = ('AGRIF_DEMO', 
                 'AMM12', 
@@ -63,16 +71,16 @@ class Nemo(MakefilePackage):
         default='none',
         description=' Reference configurations',
         values=ref_conf,
-        multi=False,)
+        multi=False)
 
     variant('add_key', 
-        default='None',
+        default='none',
         description='Add CPP keys',
         values=keys,
         multi=True)
 
     variant('del_key', 
-        default='None',
+        default='none',
         description='Remove CPP keys',
         values=keys,
         multi=True)
@@ -135,37 +143,106 @@ class Nemo(MakefilePackage):
 
         if spec.satisfies('%gcc'):
             if '+debug' in spec:
-                param['FFLAGS'].extend(['-g', '-O0'])
-                param['CFLAGS'].extend(['-g', '-O0'])
-            else:
-                param['FFLAGS'].extend(['-g', '-O3',
-                    '-fdefault-real-8', 
-                    '-funroll-all-loops', 
-                    '-fcray-pointer', 
+                param['FFLAGS'].extend([
+                    '-g', '-O0',
+                    '-fdefault-real-8',
+                    '-fcray-pointer',
                     '-ffree-line-length-none'])
-                param['CFLAGS'].extend(['-g', '-O3', 
+                param['CFLAGS'].extend([
+                    '-g', '-O0'])
+            else:
+                param['FFLAGS'].extend([
+                    '-g', '-O3',
+                    '-fdefault-real-8', 
+                    '-fcray-pointer', 
+                    '-ffree-line-length-none',
+                    '-funroll-all-loops'])
+                param['CFLAGS'].extend([
+                    '-g', '-O3', 
                     '-funroll-all-loops'])
         elif spec.satisfies('%intel'):
             if '+debug' in spec:
-                param['FFLAGS'].extend(['-g', '-O0'])
-                param['CFLAGS'].extend(['-g', '-O0'])
-            else:
-                param['FFLAGS'].extend(['-g', '-O3',
+                param['FFLAGS'].extend([
+                    '-g', '-O0',
                     '-r8',
-                    '-qopt-zmm-usage=high', 
-                    '-no-fma', 
                     '-fp-model source', 
                     '-traceback'])
-                param['FFLAGS'].extend(['-g', '-O3'])
+                param['CFLAGS'].extend([
+                    '-g', '-O0'])
+            else:
+                param['FFLAGS'].extend([
+                    '-g', '-O3',
+                    '-r8',
+                    '-fp-model source', 
+                    '-traceback',
+                    '-qopt-zmm-usage=high'])
+                param['CFLAGS'].extend([
+                    '-g', '-O3'])
         elif spec.satisfies('%pgi'):
             if '+debug' in spec:
-                param['FFLAGS'].extend(['-g', '-O0'])
-                param['CFLAGS'].extend(['-g', '-O0'])
-            else:
-                param['FFLAGS'].extend(['-g', '-O3', 
+                param['FFLAGS'].extend([
+                    '-g', '-O0',
                     '-i4', 
                     '-r8'])
-                param['CFLAGS'].extend(['-g', '-O3'])
+                param['CFLAGS'].extend([
+                    '-g', '-O0'])
+            else:
+                param['FFLAGS'].extend([
+                    '-g', '-O3',
+                    '-fast',
+                    '-i4', 
+                    '-r8'])
+                param['CFLAGS'].extend([
+                    '-g', '-O3',
+                    '-fast'])
+        elif spec.satisfies('%cce'):
+            if '+debug' in spec:
+                param['FFLAGS'].extend([
+                    '-g', '-O0',
+                    '-em',
+                    '-s integer32',
+                    '-s real64'])
+                param['CFLAGS'].extend([
+                    '-g', '-O0',
+                    '-em',
+                    '-s integer32',
+                    '-s real64'])
+            else:
+                param['FFLAGS'].extend([
+                    '-g', '-O3',
+                    '-em',
+                    '-s integer32',
+                    '-s real64'])
+                param['CFLAGS'].extend([
+                    '-g', '-O3',
+                    '-em',
+                    '-s integer32',
+                    '-s real64'])
+        elif spec.satisfies('%xl'):
+            if '+debug' in spec:
+                param['FFLAGS'].extend([
+                    '-g', '-O0',
+                    '-qrealsize=8',
+                    '-qextname',
+                    '-qsuffix=f=f90',
+                    '-qsuffix=cpp=F90',
+                    '-qstrict',
+                    '-qfree=f90'])
+                param['CFLAGS'].extend([
+                    '-g', '-O0',
+                    '-qcpluscmt'])
+            else:
+                param['FFLAGS'].extend([
+                    '-g', '-O3',
+                    '-qrealsize=8',
+                    '-qextname',
+                    '-qsuffix=f=f90',
+                    '-qsuffix=cpp=F90',
+                    '-qstrict',
+                    '-qfree=f90'])
+                param['CFLAGS'].extend([
+                    '-g', '-O3',
+                    '-qcpluscmt'])
 
         param['FFLAGS'] = ' '.join(param['FFLAGS'])
         param['CFLAGS'] = ' '.join(param['CFLAGS'])
@@ -197,11 +274,11 @@ class Nemo(MakefilePackage):
                 str(make_jobs)])
 
         # Add/remove CPP keys
-        if(self.spec.variants['add_key'].value[0] != 'None'):
+        if(self.spec.variants['add_key'].value[0] != 'none'):
             options.extend([
                 'add_key', 
                 ' \\\"%s\\\"' % ' '.join(self.spec.variants['add_key'].value)])
-        if(self.spec.variants['del_key'].value[0] != 'None'):
+        if(self.spec.variants['del_key'].value[0] != 'none'):
             options.extend([
                 'del_key', 
                 '\\\"%s\\\"' % ' '.join(self.spec.variants['del_key'].value)])
@@ -225,9 +302,18 @@ class Nemo(MakefilePackage):
 
         install('cfgs/SPACK-%s/BLD/bin/nemo.exe' % ref_conf, 
             spec.prefix.bin + '/nemo.exe')
-        install_tree('cfgs/SPACK-%s/EXP00' % ref_conf, exp00)
+        install_tree('cfgs/SPACK-%s/BLD' % ref_conf,
+            spec.prefix + '/cfgs/%s/BLD' % ref_conf)
+        install_tree('cfgs/SPACK-%s/EXP00' % ref_conf,
+            spec.prefix + '/cfgs/%s/EXP00' % ref_conf)
+        install_tree('cfgs/SPACK-%s/MY_SRC' % ref_conf,
+            spec.prefix + '/cfgs/%s/MY_SRC' % ref_conf)
+        install_tree('cfgs/SPACK-%s/WORK' % ref_conf,
+            spec.prefix + '/cfgs/%s/WORK' % ref_conf, symlinks=False)
         install_tree('cfgs/SHARED', 
             spec.prefix + '/cfgs/SHARED')
+        install('cfgs/SPACK-%s/cpp_SPACK-%s.fcm' % (ref_conf, ref_conf), 
+            spec.prefix + '/cfgs/%s' % ref_conf)
 
         # Change symbolic link from build to install directory
         os.chdir(exp00)
