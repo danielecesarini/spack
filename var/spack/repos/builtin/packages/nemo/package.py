@@ -44,7 +44,8 @@ class Nemo(MakefilePackage):
                 'ORCA2_SAS_ICE',
                 'SPITZ12')
 
-    keys = ('key_agrif',
+    keys = ('none',
+            'key_agrif',
             'key_asminc',
             'key_c1d',
             'key_cice',
