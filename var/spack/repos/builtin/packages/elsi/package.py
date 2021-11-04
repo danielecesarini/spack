@@ -14,9 +14,31 @@ class Elsi(CMakePackage):
     codes to a variety of eigenvalue solvers."""
 
     homepage = "https://wordpress.elsi-interchange.org/"
-    url      = "https://wordpress.elsi-interchange.org/wp-content/uploads/2019/03/elsi-2.2.1.tar.gz"
-
-    version('2.2.1', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d')
+    
+    version('2.7.1', sha256='4a70b6047c39f4e0fd5eca1b2543bfa600acb8305a05ccaaf823ca045f8a4e4d',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2021/03/elsi-2.7.1.tar.gz')
+    version('2.7.0', sha256='cac19128fe2626313676b37df47580b74c9d0e161513f9de40c052251c9d46ca',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2021/03/elsi-2.7.0.tar.gz')
+    version('2.6.4', sha256='e43fc12b4954ecd70813fcb45aaef39779f7d9bb5270bbc7246e88d92c8b1dc4',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/11/elsi-2.6.4.tar.gz')
+    version('2.6.3', sha256='6de3a9068f1788b096ab7141f7170d4ceac3dabe106dbadbc8e28a6d46ad2d9b',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/11/elsi-2.6.3.tar.gz')
+    version('2.6.2', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/07/elsi-2.6.2.tar.gz')
+    version('2.6.1', sha256='f4bf08bd0ebc7739f0eae94aa15243731a1718bf314817c32f649354a3de9ad5',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/06/elsi-2.6.1.tar.gz')
+    version('2.6.0', sha256='abe147e3cbcf3624236b1439c49e18891fdeb66cfb59755302c67bd9c5755c3e',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/06/elsi-2.6.0.tar.gz')
+    version('2.5.0', sha256='f4d77c4291341c9708ab8070dc4ec683577b3556e7d9f214370d626dc6a4753f',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2020/02/elsi-2.5.0.tar.gz')
+    version('2.4.1', sha256='ba48074dd232f88f68e368c7742d7da53de94655b0c8aa9f8d71f0de1a91d39e',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2019/11/elsi-2.4.1.tar.gz')
+    version('2.3.1', sha256='ba48074dd232f88f68e368c7742d7da53de94655b0c8aa9f8d71f0de1a91d39e',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2019/07/elsi-2.3.1.tar.gz')
+    version('2.3.0', sha256='f2fad2a16c8e8c7f54f87753b34e2eecea074416251620268a7633272646ce92',
+             url = 'http://wordpress.elsi-interchange.org/wp-content/uploads/2019/06/elsi-2.3.0.tar.gz')
+    version('2.2.1', sha256='5b4b2e8fa4b3b68131fe02cc1803a884039b89a1b1138af474af66453bec0b4d',
+             url = 'https://wordpress.elsi-interchange.org/wp-content/uploads/2019/03/elsi-2.2.1.tar.gz')
 
     # Variants (translation of cmake options)
     variant(
