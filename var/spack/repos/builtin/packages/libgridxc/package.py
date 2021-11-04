@@ -25,11 +25,15 @@ class Libgridxc(Package):
     version('0.8.0', sha256='ff89b3302f850d1d9f651951e4ade20dfa4c71c809a2d86382c6797392064c9c')
     version('0.7.6', sha256='058b80f40c85997eea0eae3f15b7cc8105f817e59564106308b22f57a03b216b')
 
+    variant('mpi', default=True, description='Builds with mpi support')
+    variant('sp', default=False, description='Builds with single precision support')
+
     depends_on('autoconf@2.69:', type='build')
     depends_on('automake@1.14:', type='build')
     depends_on('libtool@2.4.2:', type='build')
     depends_on('m4', type='build')
     depends_on('libxc@:4.3.4', when='@0.8.0:')
+    depends_on('mpi', when='+mpi')
 
     phases = ['configure', 'build', 'install']
 
@@ -41,16 +45,32 @@ class Libgridxc(Package):
 
     def build(self, spec, prefix):
         with working_dir('build'):
-            if self.version < Version('0.8.0'):
-                make('PREFIX=%s' % self.prefix,
-                     'FC=fc',
-                     parallel=False)
+            if '+mpi' in spec:
+                if self.version < Version('0.8.0'):
+                    make('PREFIX=%s' % self.prefix,
+                         'FC=%s' % spec['mpi'].mpifc,
+                         'WITH_MPI=1',
+                         'MPI_ROOT=%s' % spec['mpi'].prefix,
+                         parallel=False)
+                else:
+                    make('PREFIX=%s' % self.prefix,
+                         'FC=%s' % spec['mpi'].mpifc,
+                         'WITH_LIBXC=1',
+                         'LIBXC_ROOT=%s' % spec['libxc'].prefix,
+                         'WITH_MPI=1',
+                         'MPI_ROOT=%s' % spec['mpi'].prefix,
+                         parallel=False)
             else:
-                make('PREFIX=%s' % self.prefix,
-                     'FC=fc',
-                     'WITH_LIBXC=1',
-                     'LIBXC_ROOT=%s' % self.spec['libxc'].prefix,
-                     parallel=False)
+                if self.version < Version('0.8.0'):
+                    make('PREFIX=%s' % self.prefix,
+                         'FC=%s' % self.compiler.fc,
+                         parallel=False)
+                else:
+                    make('PREFIX=%s' % self.prefix,
+                         'FC=%s' % self.compiler.fc,
+                         'WITH_LIBXC=1',
+                         'LIBXC_ROOT=%s' % spec['libxc'].prefix,
+                         parallel=False)
 
     def install(self, spec, prefix):
         mkdirp(join_path(self.prefix, 'share', 'org.siesta-project'))
