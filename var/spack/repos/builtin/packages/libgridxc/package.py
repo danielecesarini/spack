@@ -76,7 +76,5 @@ class Libgridxc(Package):
         mkdirp(join_path(self.prefix, 'share', 'org.siesta-project'))
         install(join_path(self.prefix, 'gridxc.mk'),
                 join_path(self.prefix, 'share', 'org.siesta-project', 'gridxc.mk'))
-        os.remove(join_path(self.prefix, 'gridxc.mk'))
         install(join_path(self.prefix, 'libxc.mk'),
                 join_path(self.prefix, 'share', 'org.siesta-project', 'libxc.mk'))
-        os.remove(join_path(self.prefix, 'libxc.mk'))
