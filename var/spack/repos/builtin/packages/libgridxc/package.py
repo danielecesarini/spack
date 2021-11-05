@@ -26,7 +26,6 @@ class Libgridxc(Package):
     version('0.7.6', sha256='058b80f40c85997eea0eae3f15b7cc8105f817e59564106308b22f57a03b216b')
 
     variant('mpi', default=True, description='Builds with mpi support')
-    variant('sp', default=False, description='Builds with single precision support')
 
     depends_on('autoconf@2.69:', type='build')
     depends_on('automake@1.14:', type='build')
