@@ -1,12 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2022 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# Author: Daniele Cesarini <d.cesarini AT cineca.it>
-# Date: May 12, 2020
-# ----------------------------------------------------------------------------
 
 from spack import *
 import os
@@ -16,23 +11,14 @@ class Nemo(MakefilePackage):
     modelling framework of ocean related engines for oceanographic research,
     operational oceanography, seasonal forecast and [paleo]climate studies."""
 
+    homepage = 'http://forge.ipsl.jussieu.fr/nemo/wiki/Users'
+
     nemo_arch_file = './arch/arch-SPACK.fcm'
     nemo_options = []
 
-    homepage = 'http://forge.ipsl.jussieu.fr/nemo/wiki/Users'
-    maintainers = ['danielecesarini']
-
-    version('4.0',
-            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/release-4.0')
-    version('4.0.1',
-            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/release-4.0.1')
-    version('4.0.2',
-            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.2')
-    version('4.0.3',
-            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.3')
-    version('4.0.4',
-            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.4')
-
+    version('4.0.6',
+            svn='https://forge.ipsl.jussieu.fr/nemo/svn/NEMO/releases/r4.0/r4.0.6')
+    
     ref_conf = ('AGRIF_DEMO', 
                 'AMM12', 
                 'C1D_PAPA',
@@ -68,30 +54,23 @@ class Nemo(MakefilePackage):
             'key_trdtrc',
             'key_vectopt_loop')
 
-    variant('ref_conf', 
+    variant('ref-conf', 
         default='none',
-        description=' Reference configurations',
+        description='Reference configuration',
         values=ref_conf,
         multi=False)
 
-    variant('add_key', 
+    variant('add-key', 
         default='none',
         description='Add CPP keys',
         values=keys,
         multi=True)
 
-    variant('del_key', 
+    variant('del-key', 
         default='none',
         description='Remove CPP keys',
         values=keys,
         multi=True)
-
-    variant('debug', 
-        default=False, 
-        description='Enable debug build')
-
-    conflicts('ref_conf=none', 
-        msg='A value for reference configuration must be specified.')
 
     # Build dependencies
     depends_on('mpi')
@@ -143,107 +122,38 @@ class Nemo(MakefilePackage):
         param['LDFLAGS'] = []
 
         if spec.satisfies('%gcc'):
-            if '+debug' in spec:
-                param['FFLAGS'].extend([
-                    '-g', '-O0',
-                    '-fdefault-real-8',
-                    '-fcray-pointer',
-                    '-ffree-line-length-none'])
-                param['CFLAGS'].extend([
-                    '-g', '-O0'])
-            else:
-                param['FFLAGS'].extend([
-                    '-g', '-O3',
-                    '-fdefault-real-8', 
-                    '-fcray-pointer', 
-                    '-ffree-line-length-none',
-                    '-funroll-all-loops'])
-                param['CFLAGS'].extend([
-                    '-g', '-O3', 
-                    '-funroll-all-loops'])
+            param['FFLAGS'].extend([
+                '-fdefault-real-8', 
+                '-fcray-pointer', 
+                '-ffree-line-length-none'])
         elif spec.satisfies('%intel'):
-            if '+debug' in spec:
-                param['FFLAGS'].extend([
-                    '-g', '-O0',
-                    '-r8',
-                    '-fp-model source', 
-                    '-traceback'])
-                param['CFLAGS'].extend([
-                    '-g', '-O0'])
-            else:
-                param['FFLAGS'].extend([
-                    '-g', '-O3',
-                    '-r8',
-                    '-fp-model source', 
-                    '-traceback',
-                    '-qopt-zmm-usage=high'])
-                param['CFLAGS'].extend([
-                    '-g', '-O3'])
+            param['FFLAGS'].extend([
+                '-r8',
+                '-fp-model source', 
+                '-traceback'])
         elif spec.satisfies('%pgi'):
-            if '+debug' in spec:
-                param['FFLAGS'].extend([
-                    '-g', '-O0',
-                    '-i4', 
-                    '-r8'])
-                param['CFLAGS'].extend([
-                    '-g', '-O0'])
-            else:
-                param['FFLAGS'].extend([
-                    '-g', '-O3',
-                    '-fast',
-                    '-i4', 
-                    '-r8'])
-                param['CFLAGS'].extend([
-                    '-g', '-O3',
-                    '-fast'])
+            param['FFLAGS'].extend([
+                '-i4', 
+                '-r8'])
         elif spec.satisfies('%cce'):
-            if '+debug' in spec:
-                param['FFLAGS'].extend([
-                    '-g', '-O0',
-                    '-em',
-                    '-s integer32',
-                    '-s real64'])
-                param['CFLAGS'].extend([
-                    '-g', '-O0',
-                    '-em',
-                    '-s integer32',
-                    '-s real64'])
-            else:
-                param['FFLAGS'].extend([
-                    '-g', '-O3',
-                    '-em',
-                    '-s integer32',
-                    '-s real64'])
-                param['CFLAGS'].extend([
-                    '-g', '-O3',
-                    '-em',
-                    '-s integer32',
-                    '-s real64'])
+            param['FFLAGS'].extend([
+                '-em',
+                '-s integer32',
+                '-s real64'])
+            param['CFLAGS'].extend([
+                '-em',
+                '-s integer32',
+                '-s real64'])
         elif spec.satisfies('%xl'):
-            if '+debug' in spec:
-                param['FFLAGS'].extend([
-                    '-g', '-O0',
-                    '-qrealsize=8',
-                    '-qextname',
-                    '-qsuffix=f=f90',
-                    '-qsuffix=cpp=F90',
-                    '-qstrict',
-                    '-qfree=f90'])
-                param['CFLAGS'].extend([
-                    '-g', '-O0',
-                    '-qcpluscmt'])
-            else:
-                param['FFLAGS'].extend([
-                    '-g', '-O3',
-                    '-qrealsize=8',
-                    '-qextname',
-                    '-qsuffix=f=f90',
-                    '-qsuffix=cpp=F90',
-                    '-qstrict',
-                    '-qfree=f90'])
-                param['CFLAGS'].extend([
-                    '-g', '-O3',
-                    '-qcpluscmt'])
+            param['FFLAGS'].extend([
+                '-qrealsize=8',
+                '-qextname',
+                '-qsuffix=f=f90',
+                '-qsuffix=cpp=F90',
+                '-qstrict',
+                '-qfree=f90'])
+            param['CFLAGS'].extend([
+                '-qcpluscmt'])
 
         param['FFLAGS'] = ' '.join(param['FFLAGS'])
         param['CFLAGS'] = ' '.join(param['CFLAGS'])
@@ -264,7 +174,7 @@ class Nemo(MakefilePackage):
         options = ['-m', 'SPACK']
 
         # Add reference configuration
-        ref_conf = self.spec.variants['ref_conf'].value
+        ref_conf = self.spec.variants['ref-conf'].value
         options.extend(['-r', '%s' % ref_conf, '-n', 'SPACK-%s' % ref_conf])
 
         # Configure parallel build
@@ -274,14 +184,14 @@ class Nemo(MakefilePackage):
                 str(make_jobs)])
 
         # Add/remove CPP keys
-        if(self.spec.variants['add_key'].value[0] != 'none'):
+        if(self.spec.variants['add-key'].value[0] != 'none'):
             options.extend([
                 'add_key', 
-                '%s' % ' '.join(self.spec.variants['add_key'].value)])
-        if(self.spec.variants['del_key'].value[0] != 'none'):
+                '%s' % ' '.join(self.spec.variants['add-key'].value)])
+        if(self.spec.variants['del-key'].value[0] != 'none'):
             options.extend([
                 'del_key', 
-                '%s' % ' '.join(self.spec.variants['del_key'].value)])
+                '%s' % ' '.join(self.spec.variants['del-key'].value)])
 
         # Append to global
         self.nemo_options = options
@@ -297,7 +207,7 @@ class Nemo(MakefilePackage):
         mkdirp(spec.prefix)
         mkdirp(spec.prefix.bin)
 
-        ref_conf = self.spec.variants['ref_conf'].value
+        ref_conf = self.spec.variants['ref-conf'].value
         exp00 = spec.prefix + '/cfgs/%s/EXP00' % ref_conf
 
         install('cfgs/SPACK-%s/BLD/bin/nemo.exe' % ref_conf, 
