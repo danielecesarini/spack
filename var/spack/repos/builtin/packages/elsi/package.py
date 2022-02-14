@@ -53,6 +53,10 @@ class Elsi(CMakePackage):
         'use_mpi_iallgather', default=True,
         description="Use non-blocking collective MPI functions"
     )
+    variant(
+        'shared', default=False,
+        description="Build shared libraries"
+    )
 
     # Basic dependencies
     depends_on('blas', type="link")
@@ -109,5 +113,8 @@ class Elsi(CMakePackage):
         # Only when using fujitsu compiler
         if spec.satisfies('%fj'):
             args += ["-DCMAKE_Fortran_MODDIR_FLAG=-M"]
+
+        if '+shared' in self.spec:
+            args += ["-DBUILD_SHARED_LIBS=ON"]
 
         return args
