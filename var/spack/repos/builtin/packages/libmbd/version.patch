@@ -1,0 +1,24 @@
+--- a/cmake/LibmbdVersion.cmake	2022-02-14 14:07:28.505930431 +0100
++++ b/cmake/LibmbdVersion.cmake	2022-02-14 14:07:44.509850340 +0100
+@@ -1,21 +1,3 @@
+-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+-    execute_process(
+-        COMMAND git describe --tags --dirty=.dirty
+-        OUTPUT_VARIABLE VERSION_TAG
+-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+-        ERROR_QUIET
+-        OUTPUT_STRIP_TRAILING_WHITESPACE)
+-    message(STATUS "Setting version tag to ${VERSION_TAG} from Git")
+-elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibmbdVersionTag.cmake")
+-    include(LibmbdVersionTag)
+-else()
+-    message(FATAL_ERROR
+-        "Not in a Git repository and version tag is missing, you most likely "
+-        "attempt to install from a copy of the source tree. Obtain the source "
+-        "distribution (libmbd-<version>.tar.gz) from a Github release page "
+-        "instead.")
+-endif()
+-
+ set(PROJECT_VERSION ${VERSION_TAG})
+ string(REGEX MATCH "^([0-9]+)\.([0-9]+)\.([0-9]+)-?(.*)?$" VERSION_TAG ${VERSION_TAG})
+ 
