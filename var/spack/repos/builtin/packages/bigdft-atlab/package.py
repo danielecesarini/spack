@@ -49,7 +49,7 @@ class BigdftAtlab(AutotoolsPackage):
         args = [
             "FCFLAGS=%s" % " ".join(fcflags),
             "--with-futile-libs=%s" % spec["bigdft-futile"].libs.ld_flags,
-            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags,
+            "--with-futile-incs=%s" % spec["bigdft-futile"].headers.include_flags+"/futile",
             "--with-moduledir=%s" % prefix.include,
             "--prefix=%s" % prefix,
             "--without-etsf-io",
